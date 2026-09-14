@@ -3,6 +3,14 @@ sdl_dep = dependency('sdl2')
 toolkit_dep = [thorvg_dep, sdl_dep]
 compiler_flags = []
 
+lib_type = get_option('default_library')
+
+if lib_type == 'shared'
+    compiler_flags += ['-DTVG_TOOLKIT_EXPORT', '-DTVG_TOOLKIT_BUILD']
+else
+    compiler_flags += ['-DTVG_TOOLKIT_STATIC']
+endif
+
 # GL or GLES
 gl_dep = dependency('gl', required: false)
 gles_dep = dependency('glesv2', required: false)
@@ -47,6 +55,7 @@ thorvg_toolkit_dep = declare_dependency(
     include_directories: thorvg_toolkit_inc,
     dependencies: thorvg_dep,
     link_with: thorvg_toolkit_lib,
+    compile_args: (lib_type == 'static') ? ['-DTVG_TOOLKIT_STATIC'] : [],
 )
 meson.override_dependency('thorvg-toolkit', thorvg_toolkit_dep)
 

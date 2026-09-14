@@ -4,7 +4,27 @@
 #include <string>
 #include <thorvg.h>
 
-#define TVG_TOOLKIT_VERSION 0
+#define TVG_TOOLKIT_VERSION 0  // for compile-time checks
+
+#ifndef TVG_TOOLKIT_STATIC
+    #ifdef _WIN32
+        #if defined(TVG_TOOLKIT_BUILD)
+            #define TVG_TOOLKIT_API __declspec(dllexport)
+        #else
+            #define TVG_TOOLKIT_API __declspec(dllimport)
+        #endif
+    #elif (defined(__SUNPRO_C)  || defined(__SUNPRO_CC))
+        #define TVG_TOOLKIT_API __global
+    #else
+        #if (defined(__GNUC__) && __GNUC__ >= 4) || defined(__INTEL_COMPILER)
+            #define TVG_TOOLKIT_API __attribute__ ((visibility("default")))
+        #else
+            #define TVG_TOOLKIT_API
+        #endif
+    #endif
+#else
+    #define TVG_TOOLKIT_API
+#endif
 
 namespace tvg::toolkit
 {
@@ -73,7 +93,7 @@ enum struct Key : int32_t
  * application and call tvg::term() after the application and its resources have
  * been destroyed.
  */
-struct TVG_API App
+struct TVG_TOOLKIT_API App
 {
     /**
      * @brief Two-dimensional size in pixels.
@@ -226,7 +246,7 @@ struct TVG_API App
  *
  * @return @c Result::Success on success, or an error result on failure.
  */
-TVG_API Result run(App* app, RenderEngine engine = RenderEngine::CPU);
+TVG_TOOLKIT_API Result run(App* app, RenderEngine engine = RenderEngine::CPU);
 
 /**
  * @brief Calculates normalized animation progress from elapsed time.
@@ -242,7 +262,7 @@ TVG_API Result run(App* app, RenderEngine engine = RenderEngine::CPU);
  * @note Forward playback restarts at 0.0 at each duration boundary.
  *       With rewind enabled, successive boundaries alternate between 1.0 and 0.0.
  */
-TVG_API float progress(size_t elapsed, float duration, bool rewind = false) noexcept;
+TVG_TOOLKIT_API float progress(size_t elapsed, float duration, bool rewind = false) noexcept;
 
 }  // namespace tvg::toolkit
 
