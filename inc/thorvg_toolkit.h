@@ -98,7 +98,7 @@ struct TVG_API App
     /**
      * @brief Requests termination of the application's window event loop.
      */
-    Result quit();
+    Result quit() noexcept;
 
     /**
      * @brief Populates the canvas with the application's initial content.
@@ -190,7 +190,7 @@ struct TVG_API App
      *
      * @return Application width and height in pixels.
      */
-    const Size& size();
+    const Size& size() noexcept;
 
     /**
      * @brief Calculates average main loop FPS since the previous sample.
@@ -202,7 +202,7 @@ struct TVG_API App
      *
      * @note Calculation occurs only when this method is called.
      */
-    uint32_t fps();
+    uint32_t fps() noexcept;
 
     /**
      * @brief Application name used as the window title.
@@ -226,7 +226,7 @@ struct TVG_API App
  *
  * @return @c Result::Success on success, or an error result on failure.
  */
-TVG_API Result run(App* app, RenderEngine engine = RenderEngine::CPU);
+TVG_API Result run(App* app, RenderEngine engine = RenderEngine::CPU) noexcept;
 
 /**
  * @brief Calculates normalized animation progress from elapsed time.
@@ -242,7 +242,7 @@ TVG_API Result run(App* app, RenderEngine engine = RenderEngine::CPU);
  * @note Forward playback restarts at 0.0 at each duration boundary.
  *       With rewind enabled, successive boundaries alternate between 1.0 and 0.0.
  */
-TVG_API float progress(size_t elapsed, float duration, bool rewind = false);
+TVG_API float progress(size_t elapsed, float duration, bool rewind = false) noexcept;
 
 }  // namespace tvg::toolkit
 

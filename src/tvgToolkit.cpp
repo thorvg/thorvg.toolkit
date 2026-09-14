@@ -37,7 +37,7 @@ struct App::Impl
     size_t prevElapsed = 0;
     uint32_t lastFps = 0;
 
-    uint32_t fps()
+    uint32_t fps() noexcept
     {
         if (!window) return 0;
 
@@ -54,17 +54,17 @@ struct App::Impl
 App::App(const std::string& name, const Size& size, bool clear) :
     name(name), clear(clear), pImpl(new App::Impl(size)) {}
 
-const App::Size& App::size()
+const App::Size& App::size() noexcept
 {
     return pImpl->size;
 }
 
-uint32_t App::fps()
+uint32_t App::fps() noexcept
 {
     return pImpl->fps();
 }
 
-Result App::quit()
+Result App::quit() noexcept
 {
     if (!pImpl->window) return Result::InsufficientCondition;
     pImpl->window->running = false;
@@ -75,7 +75,7 @@ Result App::quit()
 /* Toolkit                                                              */
 /************************************************************************/
 
-Result run(App* app, RenderEngine engine)
+Result run(App* app, RenderEngine engine) noexcept
 {
     Window* window;
 
@@ -114,7 +114,7 @@ Result run(App* app, RenderEngine engine)
     return Result::InsufficientCondition;
 }
 
-float progress(size_t elapsed, float duration, bool rewind)
+float progress(size_t elapsed, float duration, bool rewind) noexcept
 {
     auto durInMS = size_t(duration * 1000.0f);
     if (durInMS == 0) return 0.0f;
