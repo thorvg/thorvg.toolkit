@@ -52,9 +52,7 @@ struct App::Impl
 };
 
 App::App(const std::string& name, const Size& size, bool clear) :
-    name(name), clear(clear), pImpl(new App::Impl(size))
-{
-}
+    name(name), clear(clear), pImpl(new App::Impl(size)) {}
 
 const App::Size& App::size()
 {
@@ -68,11 +66,9 @@ uint32_t App::fps()
 
 Result App::quit()
 {
-    if (pImpl->window) {
-        pImpl->window->running = false;
-        return Result::Success;
-    }
-    return Result::InsufficientCondition;
+    if (!pImpl->window) return Result::InsufficientCondition;
+    pImpl->window->running = false;
+    return Result::Success;
 }
 
 /************************************************************************/
@@ -110,7 +106,7 @@ Result run(App* app, RenderEngine engine)
         app->pImpl->window = window;
         window->show();
         delete (window);
-        return Result(0);
+        return Result::Success;
     }
 
     delete (window);

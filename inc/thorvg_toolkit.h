@@ -2,7 +2,7 @@
 #define _THORVG_TOOLKIT_H_
 
 #include <string>
-#include <thorvg-1/thorvg.h>
+#include <thorvg.h>
 
 #define TVG_TOOLKIT_VERSION 0
 

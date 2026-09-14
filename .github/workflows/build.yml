@@ -1,0 +1,62 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Linux (${{ matrix.compiler }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: GCC
+            cc: gcc
+            cxx: g++
+          - compiler: Clang
+            cc: clang
+            cxx: clang++
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      PKG_CONFIG_PATH: ${{ github.workspace }}/.local/lib/pkgconfig
+
+    steps:
+      - name: Check out toolkit
+        uses: actions/checkout@v4
+
+      - name: Check out ThorVG
+        uses: actions/checkout@v4
+        with:
+          repository: thorvg/thorvg
+          ref: main
+          path: .deps/thorvg
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            g++ clang libomp-dev meson ninja-build pkg-config libsdl2-dev libgl1-mesa-dev
+
+      - name: Build and install ThorVG
+        run: |
+          meson setup .deps/thorvg/build .deps/thorvg \
+            --buildtype=release --prefix="$GITHUB_WORKSPACE/.local" --libdir=lib
+          meson compile -C .deps/thorvg/build
+          meson install -C .deps/thorvg/build
+
+      - name: Configure toolkit
+        run: meson setup builddir --buildtype=release
+
+      - name: Build toolkit
+        run: meson compile -C builddir
+
+      - name: Check installation
+        run: meson install -C builddir --destdir "$RUNNER_TEMP/toolkit-install"

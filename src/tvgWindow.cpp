@@ -19,51 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
+#include <cassert>
 #include "tvgWindow.h"
-
-#include <iostream>
 #include <SDL2/SDL_syswm.h>
-
 #if defined(SDL_VIDEO_DRIVER_COCOA)
     #include <Cocoa/Cocoa.h>
     #include <QuartzCore/CAMetalLayer.h>
 #endif
 
+// fix the sdl macro conflict
+#ifdef Success
+    #undef Success
+#endif
+
 namespace tvg::toolkit
 {
 
-// TODO:
-static bool verify(Result result)
+static bool CHECK(Result result)
 {
-    switch (result) {
-        case tvg::Result::FailedAllocation: {
-            cout << "FailedAllocation!" << endl;
-            return false;
-        }
-        case tvg::Result::InsufficientCondition: {
-            cout << "InsufficientCondition!" << endl;
-            return false;
-        }
-        case tvg::Result::InvalidArguments: {
-            cout << "InvalidArguments!" << endl;
-            return false;
-        }
-        case tvg::Result::MemoryCorruption: {
-            cout << "MemoryCorruption!" << endl;
-            return false;
-        }
-        case tvg::Result::NonSupport: {
-            cout << "NonSupport!" << endl;
-            return false;
-        }
-        case tvg::Result::Unknown: {
-            cout << "Unknown!" << endl;
-            return false;
-        }
-        default: break;
-    };
-    return true;
+    assert(result == Result::Success);
+    return result == Result::Success;
 }
 
 /************************************************************************/
@@ -83,8 +58,8 @@ Window::~Window()
 
 bool Window::draw()
 {
-    if (verify(canvas->draw(app->clear))) {
-        return verify(canvas->sync());
+    if (CHECK(canvas->draw(app->clear))) {
+        return CHECK(canvas->sync());
     }
 
     return false;
@@ -97,8 +72,8 @@ bool Window::ready()
     if (!app->content(canvas, size)) return false;
 
     // initiate the first rendering before window pop-up.
-    if (!verify(canvas->draw())) return false;
-    if (!verify(canvas->sync())) return false;
+    if (!CHECK(canvas->draw())) return false;
+    if (!CHECK(canvas->sync())) return false;
 
     return true;
 }
@@ -203,7 +178,7 @@ void SwWindow::resize()
     auto surface = SDL_GetWindowSurface(window);
     if (!surface) return;
 
-    verify(static_cast<tvg::SwCanvas*>(canvas)->target((uint32_t*)surface->pixels, surface->pitch / 4, surface->w, surface->h, tvg::ColorSpace::ARGB8888));
+    CHECK(static_cast<tvg::SwCanvas*>(canvas)->target((uint32_t*)surface->pixels, surface->pitch / 4, surface->w, surface->h, tvg::ColorSpace::ARGB8888));
 }
 
 void SwWindow::refresh()
@@ -256,7 +231,7 @@ void GlWindow::resize()
 {
     // set the canvas target and draw on it.
     // TODO: When using SDL3, EGLDisplay and EGLSurface may need to be passed as arguments to target().
-    verify(static_cast<tvg::GlCanvas*>(canvas)->target(nullptr, nullptr, context, 0, size.w, size.h, tvg::ColorSpace::ABGR8888S));
+    CHECK(static_cast<tvg::GlCanvas*>(canvas)->target(nullptr, nullptr, context, 0, size.w, size.h, tvg::ColorSpace::ABGR8888S));
 }
 
 void GlWindow::refresh()
@@ -383,7 +358,7 @@ WgWindow::~WgWindow()
 void WgWindow::resize()
 {
     // set the canvas target and draw on it.
-    verify(static_cast<tvg::WgCanvas*>(canvas)->target({instance, adapter, device}, surface, size.w, size.h, tvg::ColorSpace::ABGR8888));
+    CHECK(static_cast<tvg::WgCanvas*>(canvas)->target({instance, adapter, device}, surface, size.w, size.h, tvg::ColorSpace::ABGR8888));
 }
 
 void WgWindow::refresh()
