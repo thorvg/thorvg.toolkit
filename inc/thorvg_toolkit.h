@@ -267,3 +267,9 @@ TVG_TOOLKIT_API float progress(size_t elapsed, float duration, bool rewind = fal
 }  // namespace tvg::toolkit
 
 #endif  //_THORVG_TOOLKIT_H_
+
+// FIXME: SDL2 pkg-config flags can rename main even though the toolkit owns SDL setup.
+// These examples use the standard console entry point.
+#ifdef main
+    #undef main
+#endif

@@ -47,6 +47,7 @@ static bool CHECK(Result result)
 
 Window::Window(App* app, const App::Size size) : app(app), size(size), initialized(true)
 {
+    SDL_SetMainReady();
     SDL_Init(SDL_INIT_VIDEO);
 }
 
