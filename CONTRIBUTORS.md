@@ -10,3 +10,4 @@ For definitions and responsibilities of each project role, see [Roles & Responsi
 
 ## Contributor
 - Duram Kim @alpakaDurumi
+- Vincenzo Pupillo @vpxyz
