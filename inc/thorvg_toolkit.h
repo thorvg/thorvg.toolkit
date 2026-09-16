@@ -153,7 +153,7 @@ struct TVG_TOOLKIT_API App
      *
      * @note The default implementation does nothing and returns @c false.
      */
-    virtual bool clickdown(tvg::Canvas* canvas, int32_t x, int32_t y, uint8_t button) { return false; }
+    virtual bool clickdown(tvg::Canvas* canvas, float x, float y, uint8_t button) { return false; }
 
     /**
      * @brief Handles a mouse button release.
@@ -168,7 +168,7 @@ struct TVG_TOOLKIT_API App
      *
      * @note The default implementation does nothing and returns @c false.
      */
-    virtual bool clickup(tvg::Canvas* canvas, int32_t x, int32_t y, uint8_t button) { return false; }
+    virtual bool clickup(tvg::Canvas* canvas, float x, float y, uint8_t button) { return false; }
 
     /**
      * @brief Handles a key press.
@@ -205,7 +205,7 @@ struct TVG_TOOLKIT_API App
      *
      * @note The default implementation does nothing and returns @c false.
      */
-    virtual bool motion(tvg::Canvas* canvas, int32_t x, int32_t y) { return false; }
+    virtual bool motion(tvg::Canvas* canvas, float x, float y) { return false; }
 
     /**
      * @brief Handles mouse wheel scrolling.
@@ -220,7 +220,7 @@ struct TVG_TOOLKIT_API App
      * Flipped scrolling is normalized to the directions described above.
      * The default implementation does nothing and returns @c false.
      */
-    virtual bool wheel(tvg::Canvas* canvas, int32_t x, int32_t y) { return false; }
+    virtual bool wheel(tvg::Canvas* canvas, float x, float y) { return false; }
 
     /**
      * @brief Returns the application's current size in pixels.
