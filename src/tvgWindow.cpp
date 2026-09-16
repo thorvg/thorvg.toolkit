@@ -21,8 +21,8 @@
  */
 #include <cassert>
 #include "tvgWindow.h"
-#include <SDL2/SDL_syswm.h>
-#if defined(SDL_VIDEO_DRIVER_COCOA)
+#include <SDL3/SDL_main.h>
+#if defined(SDL_PLATFORM_MACOS)
     #include <Cocoa/Cocoa.h>
     #include <QuartzCore/CAMetalLayer.h>
 #endif
@@ -48,6 +48,14 @@ static bool CHECK(Result result)
 Window::Window(App* app, const App::Size size) : app(app), size(size), initialized(true)
 {
     SDL_SetMainReady();
+
+#if defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_FREEBSD)
+    // Under X11 or XWayland, bypassing the window compositor (SDL default)
+    // could cause side effects on other applications.
+    // https://github.com/yshui/picom/issues/998 and
+    // https://github.com/libsdl-org/SDL/issues/3802
+    SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
+#endif
     SDL_Init(SDL_INIT_VIDEO);
 }
 
@@ -94,31 +102,31 @@ void Window::show()
         // SDL Event handling
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_QUIT: {
+                case SDL_EVENT_QUIT: {
                     running = false;
                     break;
                 }
-                case SDL_KEYDOWN: {
-                    needDraw |= app->keydown(canvas, static_cast<Key>(event.key.keysym.sym));
+                case SDL_EVENT_KEY_DOWN: {
+                    needDraw |= app->keydown(canvas, static_cast<Key>(event.key.key));
                     break;
                 }
-                case SDL_KEYUP: {
-                    needDraw |= app->keyup(canvas, static_cast<Key>(event.key.keysym.sym));
+                case SDL_EVENT_KEY_UP: {
+                    needDraw |= app->keyup(canvas, static_cast<Key>(event.key.key));
                     break;
                 }
-                case SDL_MOUSEBUTTONDOWN: {
+                case SDL_EVENT_MOUSE_BUTTON_DOWN: {
                     needDraw |= app->clickdown(canvas, event.button.x, event.button.y, event.button.button);
                     break;
                 }
-                case SDL_MOUSEBUTTONUP: {
+                case SDL_EVENT_MOUSE_BUTTON_UP: {
                     needDraw |= app->clickup(canvas, event.button.x, event.button.y, event.button.button);
                     break;
                 }
-                case SDL_MOUSEMOTION: {
+                case SDL_EVENT_MOUSE_MOTION: {
                     needDraw |= app->motion(canvas, event.button.x, event.button.y);
                     break;
                 }
-                case SDL_MOUSEWHEEL: {
+                case SDL_EVENT_MOUSE_WHEEL: {
                     auto x = event.wheel.x;
                     auto y = event.wheel.y;
                     if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
@@ -128,12 +136,10 @@ void Window::show()
                     needDraw |= app->wheel(canvas, x, y);
                     break;
                 }
-                case SDL_WINDOWEVENT: {
-                    if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                        size = {(uint32_t)event.window.data1, (uint32_t)event.window.data2};
-                        needResize = true;
-                        needDraw = true;
-                    }
+                case SDL_EVENT_WINDOW_RESIZED: {
+                    size = {(uint32_t)event.window.data1, (uint32_t)event.window.data2};
+                    needResize = true;
+                    needDraw = true;
                 }
             }
         }
@@ -159,6 +165,7 @@ void Window::show()
     }
 }
 
+
 /************************************************************************/
 /* SwCanvas                                                             */
 /************************************************************************/
@@ -167,7 +174,8 @@ SwWindow::SwWindow(App* app, const App::Size& size) : Window(app, size)
 {
     if (!initialized) return;
 
-    window = SDL_CreateWindow(app->name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    if (!window) return;
 
     canvas = tvg::SwCanvas::gen();
     if (!canvas) {
@@ -215,8 +223,11 @@ GlWindow::GlWindow(App* app, const App::Size& size) : Window(app, size)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
-    window = SDL_CreateWindow(app->name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.w, size.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    if (!window) return;
+
     context = SDL_GL_CreateContext(window);
+    if (!context) return;
 
     SDL_GL_SetSwapInterval(0);  // disable fps limit
 
@@ -235,7 +246,7 @@ GlWindow::~GlWindow()
     delete (app);
     delete (canvas);
 
-    SDL_GL_DeleteContext(context);
+    SDL_GL_DestroyContext(context);
 }
 
 void GlWindow::resize()
@@ -260,12 +271,7 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
 {
     if (!initialized) return;
 
-    window = SDL_CreateWindow(app->name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.w, size.h, SDL_WINDOW_HIDDEN);
-
-    // here we create our WebGPU surface from the window!
-    SDL_SysWMinfo windowWMInfo;
-    SDL_VERSION(&windowWMInfo.version);
-    if (!SDL_GetWindowWMInfo(window, &windowWMInfo)) return;
+    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
 
     // init WebGPU
     WGPUInstanceDescriptor desc{};
@@ -280,45 +286,53 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
         WGPUSurfaceSourceWindowsHWND win;
     } surfaceNativeDesc{};
 
-    switch (windowWMInfo.subsystem) {
-#if defined(SDL_VIDEO_DRIVER_COCOA)
-        case SDL_SYSWM_COCOA: {
-            [windowWMInfo.info.cocoa.window.contentView setWantsLayer:YES];
+#if defined(SDL_PLATFORM_MACOS)
+    NSWindow *nswindow = (NSWindow*) SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
+    if (nswindow) {
+            [nswindow.contentView setWantsLayer:YES];
             auto layer = [CAMetalLayer layer];
-            [windowWMInfo.info.cocoa.window.contentView setLayer:layer];
+            [nswindow.contentView setLayer:layer];
 
             surfaceNativeDesc.cocoa = {
                 .chain = {nullptr, WGPUSType_SurfaceSourceMetalLayer},
                 .layer = layer};
-            break;
-        }
-#endif
-#if defined(SDL_VIDEO_DRIVER_X11)
-        case SDL_SYSWM_X11:
+    } else
+        return;
+
+#elif defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_FREEBSD)
+    if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) {
+        auto xdisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
+        auto xwindow = SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        if (xdisplay && xwindow) {
             surfaceNativeDesc.x11 = {
                 .chain = {nullptr, WGPUSType_SurfaceSourceXlibWindow},
-                .display = windowWMInfo.info.x11.display,
-                .window = windowWMInfo.info.x11.window};
-            break;
-#endif
-#if defined(SDL_VIDEO_DRIVER_WAYLAND)
-        case SDL_SYSWM_WAYLAND:
+                .display = xdisplay,
+                .window = (uint64_t) xwindow};
+        } else
+            return;
+    } else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+        auto display = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
+        auto surface = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
+        if (display && surface) {
             surfaceNativeDesc.wl = {
                 .chain = {nullptr, WGPUSType_SurfaceSourceWaylandSurface},
-                .display = windowWMInfo.info.wl.display,
-                .surface = windowWMInfo.info.wl.surface};
-            break;
+                .display = display,
+                .surface = surface};
+        } else
+            return;
+    } else
+        return;
+
+#elif defined(SDL_PLATFORM_WIN32)
+    auto hwnd = SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    if (hwnd) {
+        surfaceNativeDesc.win = {
+            .chain = {nullptr, WGPUSType_SurfaceSourceWindowsHWND},
+            .hinstance = GetModuleHandle(nullptr),
+            .hwnd = hwnd};
+    } else
+        return;
 #endif
-#if defined(SDL_VIDEO_DRIVER_WINDOWS)
-        case SDL_SYSWM_WINDOWS:
-            surfaceNativeDesc.win = {
-                .chain = {nullptr, WGPUSType_SurfaceSourceWindowsHWND},
-                .hinstance = GetModuleHandle(nullptr),
-                .hwnd = windowWMInfo.info.win.window};
-            break;
-#endif
-        default: return;
-    }
 
     // create surface
     WGPUSurfaceDescriptor surfaceDesc{};

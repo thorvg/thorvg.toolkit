@@ -1,5 +1,5 @@
 thorvg_dep = dependency('thorvg-1', version: '>=1.0.0')
-sdl_dep = dependency('sdl2')
+sdl_dep = dependency('sdl3', version: '>=3.2.0')
 toolkit_dep = [thorvg_dep, sdl_dep]
 compiler_flags = []
 
@@ -67,5 +67,5 @@ pkg_mod.generate(
     name             : 'libthorvg-toolkit',
     filebase         : 'thorvg-toolkit',
     description      : 'ThorVG Application Toolkit',
-    requires         : thorvg_dep
+    requires         : toolkit_dep
 )

@@ -10,7 +10,7 @@
   <img width="550" height="auto" src="https://github.com/thorvg/thorvg.site/blob/main/readme/logo/animated_brand.svg">
 </p>
 
-ThorVG Toolkit is a C++ library for building applications with [ThorVG](https://github.com/thorvg/thorvg). It handles window creation, rendering, and the event loop through [SDL2](https://www.libsdl.org/), so you can focus on drawing content and responding to user input.
+ThorVG Toolkit is a C++ library for building applications with [ThorVG](https://github.com/thorvg/thorvg). It handles window creation, rendering, and the event loop through [SDL3](https://www.libsdl.org/), so you can focus on drawing content and responding to user input.
 
 The toolkit provides:
 
@@ -34,7 +34,7 @@ Install the following dependencies before building:
 
 - A C++17 or higher compiler.
 - [ThorVG](https://github.com/thorvg/thorvg) 1.0.0 or later.
-- [SDL2](https://www.libsdl.org/).
+- [SDL3](https://www.libsdl.org/).
 - [Meson](https://mesonbuild.com/), [Ninja](https://ninja-build.org/), and [pkg-config](https://www.freedesktop.org/wiki/Software/pkgconfig/).
 
 From the project root, run:
