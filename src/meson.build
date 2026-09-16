@@ -1,5 +1,5 @@
 thorvg_dep = dependency('thorvg-1', version: '>=1.0.0')
-sdl_dep = dependency('sdl2')
+sdl_dep = dependency('sdl3')
 toolkit_dep = [thorvg_dep, sdl_dep]
 compiler_flags = []
 
