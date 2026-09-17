@@ -79,10 +79,10 @@ struct GlWindow : Window
 #ifdef TVG_WGPU_SUPPORTED
     struct WgWindow : Window
     {
-        WGPUInstance instance;
-        WGPUSurface surface;
-        WGPUAdapter adapter;
-        WGPUDevice device;
+        WGPUInstance instance = nullptr;
+        WGPUSurface surface = nullptr;
+        WGPUAdapter adapter = nullptr;
+        WGPUDevice device = nullptr;
 
         WgWindow(App* app, const App::Size& size);
         ~WgWindow();
