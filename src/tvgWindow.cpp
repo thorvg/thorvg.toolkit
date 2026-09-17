@@ -255,11 +255,12 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     // here we create our WebGPU surface from the window!
     SDL_SysWMinfo windowWMInfo;
     SDL_VERSION(&windowWMInfo.version);
-    SDL_GetWindowWMInfo(window, &windowWMInfo);
+    if (!SDL_GetWindowWMInfo(window, &windowWMInfo)) return;
 
     // init WebGPU
     WGPUInstanceDescriptor desc{};
     instance = wgpuCreateInstance(&desc);
+    if (!instance) return;
 
     // windowWMInfo.subsystem tells which member of the windowWMInfo.info union is valid.
     union {
@@ -306,7 +307,7 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
                 .hwnd = windowWMInfo.info.win.window};
             break;
 #endif
-        default: break;
+        default: return;
     }
 
     // create surface
@@ -315,6 +316,7 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     surfaceDesc.label.data = "The surface";
     surfaceDesc.label.length = WGPU_STRLEN;
     surface = wgpuInstanceCreateSurface(instance, &surfaceDesc);
+    if (!surface) return;
 
     // request adapter
     auto onAdapterRequestEnded = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, WGPUStringView message, WGPU_NULLABLE void* userdata1, WGPU_NULLABLE void* userdata2) {
@@ -323,6 +325,7 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     const WGPURequestAdapterOptions requestAdapterOptions{.featureLevel = WGPUFeatureLevel_Compatibility, .powerPreference = WGPUPowerPreference_HighPerformance, .compatibleSurface = surface};
     const WGPURequestAdapterCallbackInfo requestAdapterCallback{.mode = WGPUCallbackMode_WaitAnyOnly, .callback = onAdapterRequestEnded, .userdata1 = &adapter};
     wgpuInstanceRequestAdapter(instance, &requestAdapterOptions, requestAdapterCallback);
+    if (!adapter) return;
 
     // request device
     auto onDeviceError = [](WGPUDevice const* device, WGPUErrorType type, WGPUStringView message, void* userdata1, void* userdata2) {
@@ -334,6 +337,7 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     const WGPUDeviceDescriptor deviceDesc{.label = {"The device", WGPU_STRLEN}, .uncapturedErrorCallbackInfo = {.callback = onDeviceError}};
     const WGPURequestDeviceCallbackInfo requestDeviceCallback{.callback = onDeviceRequestEnded, .userdata1 = &device};
     wgpuAdapterRequestDevice(this->adapter, &deviceDesc, requestDeviceCallback);
+    if (!device) return;
 
     // create a Canvas
     canvas = tvg::WgCanvas::gen();
@@ -350,10 +354,10 @@ WgWindow::~WgWindow()
     delete (app);
     delete (canvas);
 
-    wgpuDeviceRelease(device);
-    wgpuAdapterRelease(adapter);
-    wgpuSurfaceRelease(surface);
-    wgpuInstanceRelease(instance);
+    if (device) wgpuDeviceRelease(device);
+    if (adapter) wgpuAdapterRelease(adapter);
+    if (surface) wgpuSurfaceRelease(surface);
+    if (instance) wgpuInstanceRelease(instance);
 }
 
 void WgWindow::resize()
