@@ -21,6 +21,7 @@ The toolkit provides:
 ## Contents
 
 - [Build and Install](#build-and-install)
+- [Create a Project](#create-a-project)
 - [Basic Usage](#basic-usage)
   - [Rendering Engines](#rendering-engines)
   - [Input and Update](#input-and-update)
@@ -43,6 +44,31 @@ meson setup builddir
 ninja -C builddir install
 ```
 ThorVG Toolkit installs a pkg-config file `thorvg-toolkit.pc` for integration with build systems such as Meson and CMake.
+
+[Back to contents](#contents)
+<br/>
+<br/>
+
+## Create a Project
+
+After installing ThorVG Toolkit, generate a minimal C++17 application:
+
+```sh
+./tvg-toolkit.sh MyApp
+cd MyApp
+meson setup builddir
+meson compile -C builddir
+./builddir/MyApp
+```
+
+The script creates a directory in the current working directory containing
+`meson.build` and `main.cpp`. The project name is used for the executable and
+window title. The template opens an 800 x 600 window and draws a blue rectangle
+using the default CPU renderer.
+
+Project names must start with a letter or digit and contain only ASCII letters,
+digits, underscores, or hyphens. Existing paths are never overwritten. The script
+can also be invoked by its absolute path from another directory.
 
 [Back to contents](#contents)
 <br/>
