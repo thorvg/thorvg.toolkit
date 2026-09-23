@@ -19,8 +19,8 @@ fi
 
 project_name=$1
 
-if [[ ! $project_name =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]]; then
-    printf 'Error: Project names must start with a letter or digit and contain only letters, digits, underscores, or hyphens.\n' >&2
+if [[ ! $project_name =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]; then
+    printf 'Error: Project names must start with a letter or digit and contain only letters, digits, underscores, hyphens, or dots.\n' >&2
     exit 1
 fi
 
