@@ -25,7 +25,7 @@
 
 #include "thorvg_toolkit.h"
 #include <iostream>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #ifdef TVG_WGPU_SUPPORTED
     #include <webgpu/webgpu.h>
