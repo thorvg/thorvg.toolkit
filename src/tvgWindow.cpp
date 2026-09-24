@@ -165,6 +165,10 @@ SwWindow::SwWindow(App* app, const App::Size& size) : Window(app, size)
     if (!initialized) return;
 
     window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    if (!window) {
+        std::cout << "Unable to create a window." << std::endl;
+        return;
+    }
 
     canvas = tvg::SwCanvas::gen();
     if (!canvas) {
@@ -213,7 +217,16 @@ GlWindow::GlWindow(App* app, const App::Size& size) : Window(app, size)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
     window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    if (!window) {
+        std::cout << "Unable to create a window." << std::endl;
+        return;
+    }
+
     context = SDL_GL_CreateContext(window);
+    if (!context) {
+        std::cout << "Unable to create a OpenGl context." << std::endl;
+        return;
+    }
 
     SDL_GL_SetSwapInterval(0);  // disable fps limit
 
@@ -273,47 +286,59 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     } surfaceNativeDesc{};
 
 #if defined(SDL_PLATFORM_MACOS)
-    auto nswindow = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
+    NSWindow *nswindow = (NSWindow*) SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
     if (nswindow) {
-            [windowWMInfo.info.cocoa.window.contentView setWantsLayer:YES];
+            [nswindow.contentView setWantsLayer:YES];
             auto layer = [CAMetalLayer layer];
-            [windowWMInfo.info.cocoa.window.contentView setLayer:layer];
+            [nswindow.contentView setLayer:layer];
 
             surfaceNativeDesc.cocoa = {
                 .chain = {nullptr, WGPUSType_SurfaceSourceMetalLayer},
                 .layer = layer};
+    } else {
+        std::cout << "Unable to retrieve the NSWindow ssociated with the SDL_Window." << std::endl;
+        return;
     }
 #elif defined(SDL_PLATFORM_LINUX) || defined(SDL_PLATFORM_FREEBSD)
-        if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) {
-            auto xdisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
-            auto xwindow = SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
-            if (xdisplay && xwindow) {
-                surfaceNativeDesc.x11 = {
-                    .chain = {nullptr, WGPUSType_SurfaceSourceXlibWindow},
-                    .display = xdisplay,
-                    .window = (uint64_t) xwindow};
-            }
-        } else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
-            auto display = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
-            auto surface = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
-            if (display && surface) {
-                surfaceNativeDesc.wl = {
-                    .chain = {nullptr, WGPUSType_SurfaceSourceWaylandSurface},
-                    .display = display,
-                    .surface = surface};
-            }
+    if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) {
+        auto xdisplay = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, nullptr);
+        auto xwindow = SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        if (xdisplay && xwindow) {
+            surfaceNativeDesc.x11 = {
+                .chain = {nullptr, WGPUSType_SurfaceSourceXlibWindow},
+                .display = xdisplay,
+                .window = (uint64_t) xwindow};
         } else {
-            std::cout << "Unknown linux platform!" << std::endl;
-            std::exit(1);
+            std::cout << "Unable to retrieve the X11 Display and/or the X11 Window." << std::endl;
+            return;
         }
+    } else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+        auto display = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, nullptr);
+        auto surface = SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, nullptr);
+        if (display && surface) {
+            surfaceNativeDesc.wl = {
+                .chain = {nullptr, WGPUSType_SurfaceSourceWaylandSurface},
+                .display = display,
+                .surface = surface};
+        } else {
+            std::cout << "Unable to retrieve the Wayland Display and/or the Wayland Surface." << std::endl;
+            return;
+        }
+    } else {
+        std::cout << "Unsupported platform, only Wayland or X11 are supported." << std::endl;
+        return;
+    }
 #elif defined(SDL_PLATFORM_WIN32)
-        auto hwnd = SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
-        if (hwnd) {
-            surfaceNativeDesc.win = {
-                .chain = {nullptr, WGPUSType_SurfaceSourceWindowsHWND},
-                .hinstance = GetModuleHandle(nullptr),
-                .hwnd = hwnd};
-        }
+    auto hwnd = SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    if (hwnd) {
+        surfaceNativeDesc.win = {
+            .chain = {nullptr, WGPUSType_SurfaceSourceWindowsHWND},
+            .hinstance = GetModuleHandle(nullptr),
+            .hwnd = hwnd};
+    } else {
+        std::cout << "Unable to retrieve the window handle for the SDL_Window." << std::endl;
+        return;
+    }
 #endif
 
     // create surface
@@ -322,7 +347,10 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     surfaceDesc.label.data = "The surface";
     surfaceDesc.label.length = WGPU_STRLEN;
     surface = wgpuInstanceCreateSurface(instance, &surfaceDesc);
-    if (!surface) return;
+    if (!surface) {
+        std::cout << "Unable to retrieve a WGPU surface." << std::endl;
+        return;
+    }
 
     // request adapter
     auto onAdapterRequestEnded = [](WGPURequestAdapterStatus status, WGPUAdapter adapter, WGPUStringView message, WGPU_NULLABLE void* userdata1, WGPU_NULLABLE void* userdata2) {
@@ -331,8 +359,10 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     const WGPURequestAdapterOptions requestAdapterOptions{.featureLevel = WGPUFeatureLevel_Compatibility, .powerPreference = WGPUPowerPreference_HighPerformance, .compatibleSurface = surface};
     const WGPURequestAdapterCallbackInfo requestAdapterCallback{.mode = WGPUCallbackMode_WaitAnyOnly, .callback = onAdapterRequestEnded, .userdata1 = &adapter};
     wgpuInstanceRequestAdapter(instance, &requestAdapterOptions, requestAdapterCallback);
-    if (!adapter) return;
-
+    if (!adapter) {
+        std::cout << "Unable to retrieve a WGPU adapter." << std::endl;
+        return;
+    }
     // request device
     auto onDeviceError = [](WGPUDevice const* device, WGPUErrorType type, WGPUStringView message, void* userdata1, void* userdata2) {
         std::cout << message.data << std::endl;
@@ -343,7 +373,10 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     const WGPUDeviceDescriptor deviceDesc{.label = {"The device", WGPU_STRLEN}, .uncapturedErrorCallbackInfo = {.callback = onDeviceError}};
     const WGPURequestDeviceCallbackInfo requestDeviceCallback{.callback = onDeviceRequestEnded, .userdata1 = &device};
     wgpuAdapterRequestDevice(this->adapter, &deviceDesc, requestDeviceCallback);
-    if (!device) return;
+    if (!device) {
+        std::cout << "Unable to retrieve a WGPU device." << std::endl;
+        return;
+    }
 
     // create a Canvas
     canvas = tvg::WgCanvas::gen();

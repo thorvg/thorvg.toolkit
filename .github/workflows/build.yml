@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     name: Linux (${{ matrix.compiler }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -43,7 +43,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            g++ clang libomp-dev meson ninja-build pkg-config libsdl2-dev libgl1-mesa-dev
+            g++ clang libomp-dev meson ninja-build pkg-config libsdl3-dev libgl1-mesa-dev
 
       - name: Build and install ThorVG
         run: |
