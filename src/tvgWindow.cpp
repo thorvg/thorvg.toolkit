@@ -118,6 +118,16 @@ void Window::show()
                     needDraw |= app->motion(canvas, event.button.x, event.button.y);
                     break;
                 }
+                case SDL_MOUSEWHEEL: {
+                    auto x = event.wheel.x;
+                    auto y = event.wheel.y;
+                    if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+                        x = -x;
+                        y = -y;
+                    }
+                    needDraw |= app->wheel(canvas, x, y);
+                    break;
+                }
                 case SDL_WINDOWEVENT: {
                     if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
                         size = {(uint32_t)event.window.data1, (uint32_t)event.window.data2};
