@@ -134,6 +134,7 @@ Override the `App` optional callbacks to update content or handle interaction:
 | `keydown(canvas, key)` | Handle a key press using a key code. |
 | `keyup(canvas, key)` | Handle a key release using a key code. |
 | `motion(canvas, x, y)` | Handle mouse movement in window coordinates. |
+| `wheel(canvas, x, y)` | Handle horizontal and vertical scrolling in wheel steps; positive values mean right and up. Flipped scrolling is normalized. |
 
 Return `true` from these callbacks when the canvas needs to be redrawn. Their default implementations return `false`.
 

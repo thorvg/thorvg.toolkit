@@ -90,8 +90,8 @@ enum struct Key : int32_t
  * user interaction, then pass the application to tvg::toolkit::run().
  *
  * @note The caller must initialize ThorVG with tvg::init() before creating the
- * application and call tvg::term() after the application and its resources have
- * been destroyed.
+ *       application and call tvg::term() after the application and its resources have
+ *       been destroyed.
  */
 struct TVG_TOOLKIT_API App
 {
@@ -202,6 +202,21 @@ struct TVG_TOOLKIT_API App
      * @note The default implementation does nothing and returns @c false.
      */
     virtual bool motion(tvg::Canvas* canvas, int32_t x, int32_t y) { return false; }
+
+    /**
+     * @brief Handles mouse wheel scrolling.
+     *
+     * @param canvas Canvas containing the application's content.
+     * @param x Horizontal scroll amount, positive to the right.
+     * @param y Vertical scroll amount, positive away from the user (up).
+     *
+     * @return @c true if the canvas needs to be redrawn, @c false otherwise.
+     *
+     * @note Scroll amounts are wheel steps, not mouse positions or pixels.
+     *       Flipped scrolling is normalized to the directions described above.
+     *       The default implementation does nothing and returns @c false.
+     */
+    virtual bool wheel(tvg::Canvas* canvas, int32_t x, int32_t y) { return false; }
 
     /**
      * @brief Returns the application's current size in pixels.
