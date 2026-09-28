@@ -46,8 +46,8 @@ enum struct RenderEngine : uint8_t
  *
  * Includes navigation keys, control keys, modifiers, and function keys.
  * Letters and digits use their ASCII values without named identifiers.
- * Values match SDL2 key codes. Keys without a named identifier retain their
- * numeric key code. @c Unknown represents an unknown key.
+ * Keys without a named identifier retain their numeric key code.
+ * @c Unknown represents an unknown key.
  */
 enum struct Key : int32_t
 {
@@ -146,12 +146,14 @@ struct TVG_TOOLKIT_API App
      * @param canvas Canvas containing the application's content.
      * @param x Horizontal mouse position in window pixels.
      * @param y Vertical mouse position in window pixels.
+     * @param button Mouse button number: 1 for left, 2 for middle, 3 for right,
+     *               4 and 5 for auxiliary buttons.
      *
      * @return @c true if the canvas needs to be redrawn, @c false otherwise.
      *
      * @note The default implementation does nothing and returns @c false.
      */
-    virtual bool clickdown(tvg::Canvas* canvas, int32_t x, int32_t y) { return false; }
+    virtual bool clickdown(tvg::Canvas* canvas, int32_t x, int32_t y, uint8_t button) { return false; }
 
     /**
      * @brief Handles a mouse button release.
@@ -159,12 +161,14 @@ struct TVG_TOOLKIT_API App
      * @param canvas Canvas containing the application's content.
      * @param x Horizontal mouse position in window pixels.
      * @param y Vertical mouse position in window pixels.
+     * @param button Mouse button number: 1 for left, 2 for middle, 3 for right,
+     *               4 and 5 for auxiliary buttons.
      *
      * @return @c true if the canvas needs to be redrawn, @c false otherwise.
      *
      * @note The default implementation does nothing and returns @c false.
      */
-    virtual bool clickup(tvg::Canvas* canvas, int32_t x, int32_t y) { return false; }
+    virtual bool clickup(tvg::Canvas* canvas, int32_t x, int32_t y, uint8_t button) { return false; }
 
     /**
      * @brief Handles a key press.

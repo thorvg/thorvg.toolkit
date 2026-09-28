@@ -129,12 +129,14 @@ Override the `App` optional callbacks to update content or handle interaction:
 | Callback | Purpose |
 | --- | --- |
 | `update(canvas, elapsed)` | Update content using elapsed time in milliseconds since the event loop started. |
-| `clickdown(canvas, x, y)` | Handle a mouse button press. |
-| `clickup(canvas, x, y)` | Handle a mouse button release. |
+| `clickdown(canvas, x, y, button)` | Handle a mouse button press. |
+| `clickup(canvas, x, y, button)` | Handle a mouse button release. |
 | `keydown(canvas, key)` | Handle a key press using a key code. |
 | `keyup(canvas, key)` | Handle a key release using a key code. |
 | `motion(canvas, x, y)` | Handle mouse movement in window coordinates. |
 | `wheel(canvas, x, y)` | Handle horizontal and vertical scrolling in wheel steps; positive values mean right and up. Flipped scrolling is normalized. |
+
+Mouse button numbers match: `1` for left, `2` for middle (wheel click), `3` for right, and `4` and `5` for auxiliary buttons.
 
 Return `true` from these callbacks when the canvas needs to be redrawn. Their default implementations return `false`.
 

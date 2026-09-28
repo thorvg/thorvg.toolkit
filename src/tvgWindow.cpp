@@ -107,11 +107,11 @@ void Window::show()
                     break;
                 }
                 case SDL_MOUSEBUTTONDOWN: {
-                    needDraw |= app->clickdown(canvas, event.button.x, event.button.y);
+                    needDraw |= app->clickdown(canvas, event.button.x, event.button.y, event.button.button);
                     break;
                 }
                 case SDL_MOUSEBUTTONUP: {
-                    needDraw |= app->clickup(canvas, event.button.x, event.button.y);
+                    needDraw |= app->clickup(canvas, event.button.x, event.button.y, event.button.button);
                     break;
                 }
                 case SDL_MOUSEMOTION: {
