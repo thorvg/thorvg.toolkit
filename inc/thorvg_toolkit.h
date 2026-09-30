@@ -32,7 +32,7 @@ namespace tvg::toolkit
 /**
  * @brief Rendering engine used by the application.
  *
- * @note If a GPU engine fails, the application falls back to the CPU engine.
+ * @note If a GPU engine fails, the application falls back to @ref RenderEngine::CPU.
  */
 enum struct RenderEngine : uint8_t
 {
@@ -47,7 +47,7 @@ enum struct RenderEngine : uint8_t
  * Includes navigation keys, control keys, modifiers, and function keys.
  * Letters and digits use their ASCII values without named identifiers.
  * Keys without a named identifier retain their numeric key code.
- * @c Unknown represents an unknown key.
+ * @ref Key::Unknown represents an unknown key.
  */
 enum struct Key : int32_t
 {
@@ -85,12 +85,12 @@ enum struct Key : int32_t
 /**
  * @brief Base class for a ThorVG application with rendering and input callbacks.
  *
- * Derive from this class and implement content() to initialize the canvas.
+ * Derive from this class and implement @ref App::content() to initialize the canvas.
  * Override the optional update and input callbacks to animate content and handle
- * user interaction, then pass the application to tvg::toolkit::run().
+ * user interaction, then pass the application to @ref tvg::toolkit::run().
  *
- * @note The caller must initialize ThorVG with tvg::init() before creating the
- * application and call tvg::term() after the application and its resources have
+ * @note The caller must initialize ThorVG with @ref tvg::init() before creating the
+ * application and call @ref tvg::term() after the application and its resources have
  * been destroyed.
  */
 struct TVG_TOOLKIT_API App
@@ -174,7 +174,7 @@ struct TVG_TOOLKIT_API App
      * @brief Handles a key press.
      *
      * @param canvas Canvas containing the application's content.
-     * @param key Key code of the pressed key.
+     * @param key Key code of the pressed key. See @ref Key.
      *
      * @return @c true if the canvas needs to be redrawn, @c false otherwise.
      *
@@ -186,7 +186,7 @@ struct TVG_TOOLKIT_API App
      * @brief Handles a key release.
      *
      * @param canvas Canvas containing the application's content.
-     * @param key Key code of the released key.
+     * @param key Key code of the released key. See @ref Key.
      *
      * @return @c true if the canvas needs to be redrawn, @c false otherwise.
      *
@@ -259,11 +259,13 @@ struct TVG_TOOLKIT_API App
  * @brief Runs the application with the specified window dimensions and rendering engine.
  *
  * @param app Application to run.
- * @param engine Rendering engine to use. Defaults to RenderEngine::CPU.
+ * @param engine Rendering engine to use. Defaults to @ref RenderEngine::CPU.
+ * @param op Engine option. See @ref tvg::EngineOption.
+ *           Defaults to @ref tvg::EngineOption::Default.
  *
- * @return @c Result::Success on success, or an error result on failure.
+ * @return @ref tvg::Result::Success on success, or an error result on failure.
  */
-TVG_TOOLKIT_API Result run(App* app, RenderEngine engine = RenderEngine::CPU);
+TVG_TOOLKIT_API Result run(App* app, RenderEngine engine = RenderEngine::CPU, tvg::EngineOption op = tvg::EngineOption::Default);
 
 /**
  * @brief Calculates normalized animation progress from elapsed time.

@@ -60,7 +60,7 @@ struct Window
 
 struct SwWindow : Window
 {
-    SwWindow(App* app, const App::Size& size);
+    SwWindow(App* app, const App::Size& size, EngineOption op);
     ~SwWindow();
     void resize() override;
     void refresh() override;
@@ -70,7 +70,7 @@ struct GlWindow : Window
 {
     SDL_GLContext context;
 
-    GlWindow(App* app, const App::Size& size);
+    GlWindow(App* app, const App::Size& size, EngineOption op);
     ~GlWindow();
     void resize() override;
     void refresh() override;
@@ -84,7 +84,7 @@ struct GlWindow : Window
         WGPUAdapter adapter = nullptr;
         WGPUDevice device = nullptr;
 
-        WgWindow(App* app, const App::Size& size);
+        WgWindow(App* app, const App::Size& size, EngineOption op);
         ~WgWindow();
         void resize() override;
         void refresh() override;
@@ -92,7 +92,7 @@ struct GlWindow : Window
 #else
     struct WgWindow : Window
     {
-        WgWindow(App* app, const App::Size& size) : Window(app, size)
+        WgWindow(App* app, const App::Size& size, EngineOption) : Window(app, size)
         {
             std::cout << "webgpu driver is not detected!" << std::endl;
         }
