@@ -80,19 +80,19 @@ Result App::quit() noexcept
 /* Toolkit                                                              */
 /************************************************************************/
 
-Result run(App* app, RenderEngine engine)
+Result run(App* app, RenderEngine engine, EngineOption op)
 {
     Window* window;
 
     switch (engine) {
         case RenderEngine::GL:
-            window = new GlWindow(app, app->size());
+            window = new GlWindow(app, app->size(), op);
             break;
         case RenderEngine::WEBGPU:
-            window = new WgWindow(app, app->size());
+            window = new WgWindow(app, app->size(), op);
             break;
         default:
-            window = new SwWindow(app, app->size());
+            window = new SwWindow(app, app->size(), op);
             break;
     }
 
@@ -102,7 +102,7 @@ Result run(App* app, RenderEngine engine)
     if (!ready && engine != RenderEngine::CPU) {
         window->app = nullptr;
         delete (window);
-        window = new SwWindow(app, app->size());
+        window = new SwWindow(app, app->size(), op);
         ready = window->ready();
     }
 

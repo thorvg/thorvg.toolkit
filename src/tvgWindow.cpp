@@ -163,13 +163,13 @@ void Window::show()
 /* SwCanvas                                                             */
 /************************************************************************/
 
-SwWindow::SwWindow(App* app, const App::Size& size) : Window(app, size)
+SwWindow::SwWindow(App* app, const App::Size& size, EngineOption op) : Window(app, size)
 {
     if (!initialized) return;
 
     window = SDL_CreateWindow(app->name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
 
-    canvas = tvg::SwCanvas::gen();
+    canvas = tvg::SwCanvas::gen(op);
     if (!canvas) {
         std::cout << "SwCanvas is not supported. Did you enable the SwEngine?" << std::endl;
         return;
@@ -201,7 +201,7 @@ void SwWindow::refresh()
 /* GlCanvas                                                             */
 /************************************************************************/
 
-GlWindow::GlWindow(App* app, const App::Size& size) : Window(app, size)
+GlWindow::GlWindow(App* app, const App::Size& size, EngineOption op) : Window(app, size)
 {
     if (!initialized) return;
 
@@ -221,7 +221,7 @@ GlWindow::GlWindow(App* app, const App::Size& size) : Window(app, size)
     SDL_GL_SetSwapInterval(0);  // disable fps limit
 
     // create a Canvas
-    canvas = tvg::GlCanvas::gen();
+    canvas = tvg::GlCanvas::gen(op);
     if (!canvas) {
         std::cout << "GlCanvas is not supported. Did you enable the GlEngine?" << std::endl;
         return;
@@ -256,7 +256,7 @@ void GlWindow::refresh()
 
 #ifdef TVG_WGPU_SUPPORTED
 
-WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
+WgWindow::WgWindow(App* app, const App::Size& size, EngineOption op) : Window(app, size)
 {
     if (!initialized) return;
 
@@ -350,7 +350,7 @@ WgWindow::WgWindow(App* app, const App::Size& size) : Window(app, size)
     if (!device) return;
 
     // create a Canvas
-    canvas = tvg::WgCanvas::gen();
+    canvas = tvg::WgCanvas::gen(op);
     if (!canvas) {
         std::cout << "WgCanvas is not supported. Did you enable the WgEngine?" << std::endl;
         return;
