@@ -393,7 +393,7 @@ WgWindow::~WgWindow()
 void WgWindow::resize()
 {
     // set the canvas target and draw on it.
-    CHECK(static_cast<tvg::WgCanvas*>(canvas)->target({instance, adapter, device}, surface, size.w, size.h, tvg::ColorSpace::ABGR8888));
+    CHECK(static_cast<tvg::WgCanvas*>(canvas)->target({instance, adapter, device}, surface, size.w, size.h, tvg::ColorSpace::XBGR8888));
 }
 
 void WgWindow::refresh()
