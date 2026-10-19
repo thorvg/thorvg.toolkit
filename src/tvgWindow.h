@@ -46,21 +46,27 @@ struct Window
     bool needResize = false;
     bool needDraw = false;
     bool initialized = false;
-    bool running = false;
+    bool running = true;
 
     Window(App* app, const App::Size size);
     virtual ~Window();
-    virtual void resize() {}
+    virtual void resize();
     virtual void refresh() {}
 
+    bool create(SDL_WindowFlags flags, bool fullscreen);
     bool draw();
     bool ready();
     void show();
+
+    bool fullscreen(bool on)
+    {
+        return window && SDL_SetWindowFullscreen(window, on);
+    }
 };
 
 struct SwWindow : Window
 {
-    SwWindow(App* app, const App::Size& size, EngineOption op);
+    SwWindow(App* app, const App::Size& size, EngineOption op, bool fullscreen);
     ~SwWindow();
     void resize() override;
     void refresh() override;
@@ -68,9 +74,9 @@ struct SwWindow : Window
 
 struct GlWindow : Window
 {
-    SDL_GLContext context;
+    SDL_GLContext context = nullptr;
 
-    GlWindow(App* app, const App::Size& size, EngineOption op);
+    GlWindow(App* app, const App::Size& size, EngineOption op, bool fullscreen);
     ~GlWindow();
     void resize() override;
     void refresh() override;
@@ -84,7 +90,7 @@ struct GlWindow : Window
         WGPUAdapter adapter = nullptr;
         WGPUDevice device = nullptr;
 
-        WgWindow(App* app, const App::Size& size, EngineOption op);
+        WgWindow(App* app, const App::Size& size, EngineOption op, bool fullscreen);
         ~WgWindow();
         void resize() override;
         void refresh() override;
@@ -92,7 +98,7 @@ struct GlWindow : Window
 #else
     struct WgWindow : Window
     {
-        WgWindow(App* app, const App::Size& size, EngineOption) : Window(app, size)
+        WgWindow(App* app, const App::Size& size, EngineOption, bool) : Window(app, size)
         {
             std::cout << "webgpu driver is not detected!" << std::endl;
         }

@@ -36,6 +36,7 @@ struct App::Impl
     size_t prevFrames = 0;
     size_t prevElapsed = 0;
     uint32_t lastFps = 0;
+    bool fullscreen = false;
 
     uint32_t fps() noexcept
     {
@@ -61,12 +62,21 @@ App::~App()
 
 const App::Size& App::size() noexcept
 {
-    return pImpl->size;
+    return pImpl->window ? pImpl->window->size : pImpl->size;
 }
 
 uint32_t App::fps() noexcept
 {
     return pImpl->fps();
+}
+
+Result App::fullscreen(bool on) noexcept
+{
+    if (!pImpl->window || pImpl->window->fullscreen(on)) {
+        pImpl->fullscreen = on;
+        return Result::Success;
+    }
+    return Result::InsufficientCondition;
 }
 
 Result App::quit() noexcept
@@ -82,17 +92,19 @@ Result App::quit() noexcept
 
 Result run(App* app, RenderEngine engine, EngineOption op)
 {
-    Window* window;
+    if (!app) return Result::InvalidArguments;
+
+    Window*& window = app->pImpl->window;
 
     switch (engine) {
         case RenderEngine::GL:
-            window = new GlWindow(app, app->size(), op);
+            window = new GlWindow(app, app->pImpl->size, op, app->pImpl->fullscreen);
             break;
         case RenderEngine::WEBGPU:
-            window = new WgWindow(app, app->size(), op);
+            window = new WgWindow(app, app->pImpl->size, op, app->pImpl->fullscreen);
             break;
         default:
-            window = new SwWindow(app, app->size(), op);
+            window = new SwWindow(app, app->pImpl->size, op, app->pImpl->fullscreen);
             break;
     }
 
@@ -102,13 +114,12 @@ Result run(App* app, RenderEngine engine, EngineOption op)
     if (!ready && engine != RenderEngine::CPU) {
         window->app = nullptr;
         delete (window);
-        window = new SwWindow(app, app->size(), op);
+        window = new SwWindow(app, app->pImpl->size, op, app->pImpl->fullscreen);
         ready = window->ready();
     }
 
     // succeed
     if (ready) {
-        app->pImpl->window = window;
         window->show();
         delete (window);
         return Result::Success;
