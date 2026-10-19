@@ -115,8 +115,30 @@ struct TVG_TOOLKIT_API App
 
     /**
      * @brief Requests termination of the application's window event loop.
+     *
+     * During the event loop, the current iteration completes before exiting.
+     * When called from content(), skips window display and the event loop,
+     * regardless of the callback's return value.
+     * run() destroys the application and returns @ref Result::Success.
+     *
+     * @return @ref Result::Success if accepted,
+     *         @ref Result::InsufficientCondition if called before run().
      */
     Result quit() noexcept;
+
+    /**
+     * @brief Requests desktop fullscreen or windowed mode.
+     *
+     * Before run(), stores the initial mode (windowed by default). During run(),
+     * requests a mode change; leaving fullscreen restores the windowed geometry.
+     * The constructor size specifies the initial windowed size.
+     *
+     * @param on Whether to use desktop fullscreen mode.
+     * @return Success if stored or accepted, InsufficientCondition on failure.
+     * @note A successful request may be applied later or denied by the window system;
+     *       @ref size() reflects the current canvas size.
+     */
+    Result fullscreen(bool on) noexcept;
 
     /**
      * @brief Populates the canvas with the application's initial content.

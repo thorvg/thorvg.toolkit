@@ -69,6 +69,20 @@ Window::~Window()
     SDL_Quit();
 }
 
+bool Window::create(SDL_WindowFlags flags, bool fullscreen)
+{
+    if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, flags | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    return window != nullptr;
+}
+
+void Window::resize()
+{
+    int w, h;
+    if (!SDL_GetWindowSizeInPixels(window, &w, &h)) return;
+    size = {static_cast<uint32_t>(w), static_cast<uint32_t>(h)};
+}
+
 bool Window::draw()
 {
     if (CHECK(canvas->draw(app->clear))) {
@@ -82,7 +96,9 @@ bool Window::ready()
 {
     if (!canvas) return false;
 
-    if (!app->content(canvas, size)) return false;
+    auto ready = app->content(canvas, size);
+    if (!running) return true;
+    if (!ready) return false;
 
     // initiate the first rendering before window pop-up.
     if (!CHECK(canvas->draw())) return false;
@@ -93,12 +109,13 @@ bool Window::ready()
 
 void Window::show()
 {
+    if (!running) return;
+
     SDL_ShowWindow(window);
     refresh();
 
     // Mainloop
     SDL_Event event;
-    running = true;
 
     auto ptime = SDL_GetTicks();
 
@@ -140,10 +157,11 @@ void Window::show()
                     needDraw |= app->wheel(canvas, x, y);
                     break;
                 }
-                case SDL_EVENT_WINDOW_RESIZED: {
-                    size = {(uint32_t)event.window.data1, (uint32_t)event.window.data2};
+                case SDL_EVENT_WINDOW_RESIZED:
+                case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
                     needResize = true;
                     needDraw = true;
+                    break;
                 }
             }
         }
@@ -174,12 +192,11 @@ void Window::show()
 /* SwCanvas                                                             */
 /************************************************************************/
 
-SwWindow::SwWindow(App* app, const App::Size& size, EngineOption op) : Window(app, size)
+SwWindow::SwWindow(App* app, const App::Size& size, EngineOption op, bool fullscreen) : Window(app, size)
 {
     if (!initialized) return;
 
-    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
-    if (!window) return;
+    if (!create(0, fullscreen)) return;
 
     canvas = tvg::SwCanvas::gen(op);
     if (!canvas) {
@@ -198,6 +215,8 @@ SwWindow::~SwWindow()
 
 void SwWindow::resize()
 {
+    Window::resize();
+
     auto surface = SDL_GetWindowSurface(window);
     if (!surface) return;
 
@@ -213,7 +232,7 @@ void SwWindow::refresh()
 /* GlCanvas                                                             */
 /************************************************************************/
 
-GlWindow::GlWindow(App* app, const App::Size& size, EngineOption op) : Window(app, size)
+GlWindow::GlWindow(App* app, const App::Size& size, EngineOption op, bool fullscreen) : Window(app, size)
 {
     if (!initialized) return;
 
@@ -227,8 +246,7 @@ GlWindow::GlWindow(App* app, const App::Size& size, EngineOption op) : Window(ap
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 #endif
-    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
-    if (!window) return;
+    if (!create(SDL_WINDOW_OPENGL, fullscreen)) return;
 
     context = SDL_GL_CreateContext(window);
     if (!context) return;
@@ -255,6 +273,8 @@ GlWindow::~GlWindow()
 
 void GlWindow::resize()
 {
+    Window::resize();
+
     // set the canvas target and draw on it.
     // TODO: When using SDL3, EGLDisplay and EGLSurface may need to be passed as arguments to target().
     CHECK(static_cast<tvg::GlCanvas*>(canvas)->target(nullptr, nullptr, context, 0, size.w, size.h, tvg::ColorSpace::ABGR8888S));
@@ -271,11 +291,11 @@ void GlWindow::refresh()
 
 #ifdef TVG_WGPU_SUPPORTED
 
-WgWindow::WgWindow(App* app, const App::Size& size, EngineOption op) : Window(app, size)
+WgWindow::WgWindow(App* app, const App::Size& size, EngineOption op, bool fullscreen) : Window(app, size)
 {
     if (!initialized) return;
 
-    window = SDL_CreateWindow(app->name.c_str(), size.w, size.h, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+    if (!create(0, fullscreen)) return;
 
     // init WebGPU
     WGPUInstanceDescriptor desc{};
@@ -392,6 +412,8 @@ WgWindow::~WgWindow()
 
 void WgWindow::resize()
 {
+    Window::resize();
+
     // set the canvas target and draw on it.
     CHECK(static_cast<tvg::WgCanvas*>(canvas)->target({instance, adapter, device}, surface, size.w, size.h, tvg::ColorSpace::XBGR8888));
 }
