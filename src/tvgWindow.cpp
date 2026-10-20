@@ -279,8 +279,10 @@ void GlWindow::resize()
     Window::resize();
 
     // set the canvas target and draw on it.
-    // TODO: When using SDL3, EGLDisplay and EGLSurface may need to be passed as arguments to target().
-    CHECK(static_cast<tvg::GlCanvas*>(canvas)->target(nullptr, nullptr, context, 0, size.w, size.h, tvg::ColorSpace::ABGR8888S));
+    auto display = SDL_EGL_GetCurrentDisplay();
+    auto surface = display ? SDL_EGL_GetWindowSurface(window) : nullptr;
+
+    CHECK(static_cast<tvg::GlCanvas*>(canvas)->target(display, surface, context, 0, size.w, size.h, tvg::ColorSpace::ABGR8888S));
 }
 
 void GlWindow::refresh()
